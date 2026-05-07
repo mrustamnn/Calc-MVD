@@ -4,54 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <title>Калькулятор Пенсии МВД</title>
+    <title>Пенсия МВД</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h2 { text-align: center; color: #1a237e; }
-        .group { margin-bottom: 15px; }
-        label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 10px; }
-        .result { margin-top: 20px; padding: 15px; background: #e8eaf6; border-radius: 8px; text-align: center; }
-        .result-val { font-size: 24px; color: #1a237e; font-weight: bold; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117; padding: 20px; color: #e6edf3; }
+        .card { background: #161b22; padding: 25px; border-radius: 20px; border: 1px solid #30363d; max-width: 450px; margin: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #58a6ff; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 1px; }
+        .group { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; margin-bottom: 8px; color: #8b949e; }
+        input, select { width: 100%; padding: 14px; border: 1px solid #30363d; border-radius: 10px; background: #0d1117; color: white; box-sizing: border-box; font-size: 16px; outline: none; }
+        input:focus, select:focus { border-color: #58a6ff; }
+        button { width: 100%; padding: 16px; background: #238636; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        button:active { background: #2ea043; transform: scale(0.98); }
+        .result { margin-top: 25px; padding: 20px; background: #1f2937; border-radius: 12px; text-align: center; border: 1px solid #3d444d; }
+        .result-val { font-size: 28px; color: #39d353; font-weight: bold; margin-top: 5px; }
+        .footer-note { font-size: 11px; color: #8b949e; margin-top: 15px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>Пенсия МВД</h2>
+    <h2>Расчет Пенсии</h2>
     
     <div class="group">
-        <label>Оклад по должности (руб.):</label>
-        <input type="number" id="jobSalary" placeholder="Например, 18500" value="0">
+        <label>Должностной оклад (руб.):</label>
+        <input type="number" id="jobSalary" placeholder="Введите сумму" value="18500">
+    </div>
+
+    <div class="group">
+        <label>Специальное звание:</label>
+        <select id="rankSelect" onchange="updateRankSalary()">
+            <option value="0">-- Выберите звание --</option>
+            <option value="18629">Полковник</option>
+            <option value="17196">Подполковник</option>
+            <option value="16480">Майор</option>
+            <option value="15760">Капитан</option>
+            <option value="15046">Старший лейтенант</option>
+            <option value="14330">Лейтенант</option>
+        </select>
     </div>
 
     <div class="group">
         <label>Оклад по званию (руб.):</label>
-        <input type="number" id="rankSalary" placeholder="Например, 12500" value="0">
+        <input type="number" id="rankSalary" value="0">
     </div>
 
     <div class="group">
-        <label>Выслуга лет (всего):</label>
-        <input type="number" id="years" placeholder="Лет" value="20">
+        <label>Выслуга лет (календарная):</label>
+        <input type="number" id="years" value="20">
     </div>
 
     <div class="group">
         <label>Понижающий коэффициент (%):</label>
-        <input type="number" id="koef" value="89.83" step="0.01">
+        <input type="number" id="koef" value="93.49" step="0.01">
     </div>
 
-    <button onclick="calculate()">Рассчитать</button>
+    <button onclick="calculate()">Рассчитать итог</button>
 
     <div class="result" id="resultBlock" style="display:none;">
-        <div>Ориентировочная пенсия:</div>
+        <div style="color: #8b949e;">Ежемесячная выплата:</div>
         <div class="result-val" id="total">0</div>
-        <div style="font-size: 12px; margin-top: 5px;">*Без учета районных коэффициентов</div>
+        <div class="footer-note">
+            *Расчет произведен с учетом ПК 93,49%.
+        </div>
     </div>
 </div>
 
 <script>
+    function updateRankSalary() {
+        const select = document.getElementById('rankSelect');
+        document.getElementById('rankSalary').value = select.value;
+    }
+
     function calculate() {
         const job = parseFloat(document.getElementById('jobSalary').value) || 0;
         const rank = parseFloat(document.getElementById('rankSalary').value) || 0;
@@ -59,29 +82,32 @@
         const koef = parseFloat(document.getElementById('koef').value) / 100;
 
         if (years < 20) {
-            alert("Право на пенсию наступает при выслуге от 20 лет (или смешанном стаже)");
+            alert("Внимание: Минимальная выслуга для пенсии — 20 лет.");
             return;
         }
 
-        // Базовая надбавка за выслугу лет (примерная шкала)
-        let vyslugaBonus = 0;
-        if (years >= 25) vyslugaBonus = 0.40;
-        else if (years >= 20) vyslugaBonus = 0.30;
-        else if (years >= 15) vyslugaBonus = 0.25;
+        // Процентная надбавка за выслугу лет к окладам (ПП РФ 1074)
+        let vyslugaBonusPercent = 0;
+        if (years >= 25) vyslugaBonusPercent = 0.40;
+        else if (years >= 20) vyslugaBonusPercent = 0.30;
+        else if (years >= 15) vyslugaBonusPercent = 0.25;
+        else if (years >= 10) vyslugaBonusPercent = 0.20;
+        else if (years >= 5) vyslugaBonusPercent = 0.15;
+        else if (years >= 2) vyslugaBonusPercent = 0.10;
 
-        const base = (job + rank) + (job + rank) * vyslugaBonus;
+        // Денежное довольствие для расчета пенсии
+        const baseDD = (job + rank) + (job + rank) * vyslugaBonusPercent;
         
-        // Расчет процентов от базы: 50% за 20 лет + 3% за каждый год свыше
-        let percent = 0.50 + (years - 20) * 0.03;
-        if (percent > 0.85) percent = 0.85; // Максимум 85%
+        // Процент от ДД (50% за 20 лет + 3% за каждый год свыше)
+        let pensionPercent = 0.50 + (years - 20) * 0.03;
+        if (pensionPercent > 0.85) pensionPercent = 0.85;
 
-        const finalPension = base * percent * koef;
+        const totalPension = baseDD * pensionPercent * koef;
 
-        document.getElementById('total').innerText = Math.round(finalPension).toLocaleString() + " руб.";
+        document.getElementById('total').innerText = Math.round(totalPension).toLocaleString() + " ₽";
         document.getElementById('resultBlock').style.display = "block";
     }
 
-    // Регистрация Service Worker для PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
     }
