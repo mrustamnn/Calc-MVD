@@ -2,16 +2,90 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-    <title>Калькулятор пенсии и зарплат в МВД</title>
+    <title>Калькулятор Пенсии МВД</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #f4f4f9; padding: 20px; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        h2 { text-align: center; color: #1a237e; }
+        .group { margin-bottom: 15px; }
+        label { display: block; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #1a237e; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        .result { margin-top: 20px; padding: 15px; background: #e8eaf6; border-radius: 8px; text-align: center; }
+        .result-val { font-size: 24px; color: #1a237e; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <h1>Объект готов к эксплуатации!</h1>
-    <script>
-      if ('serviceWorker' in navigator) {
+
+<div class="card">
+    <h2>Пенсия МВД</h2>
+    
+    <div class="group">
+        <label>Оклад по должности (руб.):</label>
+        <input type="number" id="jobSalary" placeholder="Например, 18500" value="0">
+    </div>
+
+    <div class="group">
+        <label>Оклад по званию (руб.):</label>
+        <input type="number" id="rankSalary" placeholder="Например, 12500" value="0">
+    </div>
+
+    <div class="group">
+        <label>Выслуга лет (всего):</label>
+        <input type="number" id="years" placeholder="Лет" value="20">
+    </div>
+
+    <div class="group">
+        <label>Понижающий коэффициент (%):</label>
+        <input type="number" id="koef" value="89.83" step="0.01">
+    </div>
+
+    <button onclick="calculate()">Рассчитать</button>
+
+    <div class="result" id="resultBlock" style="display:none;">
+        <div>Ориентировочная пенсия:</div>
+        <div class="result-val" id="total">0</div>
+        <div style="font-size: 12px; margin-top: 5px;">*Без учета районных коэффициентов</div>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const job = parseFloat(document.getElementById('jobSalary').value) || 0;
+        const rank = parseFloat(document.getElementById('rankSalary').value) || 0;
+        const years = parseInt(document.getElementById('years').value) || 0;
+        const koef = parseFloat(document.getElementById('koef').value) / 100;
+
+        if (years < 20) {
+            alert("Право на пенсию наступает при выслуге от 20 лет (или смешанном стаже)");
+            return;
+        }
+
+        // Базовая надбавка за выслугу лет (примерная шкала)
+        let vyslugaBonus = 0;
+        if (years >= 25) vyslugaBonus = 0.40;
+        else if (years >= 20) vyslugaBonus = 0.30;
+        else if (years >= 15) vyslugaBonus = 0.25;
+
+        const base = (job + rank) + (job + rank) * vyslugaBonus;
+        
+        // Расчет процентов от базы: 50% за 20 лет + 3% за каждый год свыше
+        let percent = 0.50 + (years - 20) * 0.03;
+        if (percent > 0.85) percent = 0.85; // Максимум 85%
+
+        const finalPension = base * percent * koef;
+
+        document.getElementById('total').innerText = Math.round(finalPension).toLocaleString() + " руб.";
+        document.getElementById('resultBlock').style.display = "block";
+    }
+
+    // Регистрация Service Worker для PWA
+    if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
-      }
-    </script>
+    }
+</script>
+
 </body>
 </html>
